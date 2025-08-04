@@ -2,7 +2,7 @@
 
 ![image](./architecture.png)
 
-## [Set up Console](https://docs.conduktor.io/guide/conduktor-in-production/deploy-artifacts/deploy-console/kubernetes)
+## [Set up Console](https://docs.conduktor.io/guide/tutorials/deploy-aws#overview)
 * *make sure that console can reach gateway by setting it up on a public vpc or reachable vpc* 
 * [make sure to set up rds postgres and s3](https://docs.conduktor.io/guide/conduktor-in-production/deploy-artifacts//deploy-console/kubernetes#production-requirements)
 * [if you need to set up promethues and grafana scraping](https://github.com/conduktor/conduktor-public-charts/blob/main/charts/console/README.md#install-with-console-technical-monitoring)
