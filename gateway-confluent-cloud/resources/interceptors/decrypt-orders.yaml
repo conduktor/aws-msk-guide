@@ -1,0 +1,16 @@
+---
+apiVersion: gateway/v2
+kind: Interceptor
+metadata:
+  name: decrypt-orders-json
+spec:
+  pluginClass: io.conduktor.gateway.interceptor.DecryptPlugin
+  priority: 100
+  config:
+    topic: orders
+    kmsConfig:
+      keyTtlMs: 200
+      vault:
+        uri: http://vault:8200
+        token: vault-plaintext-root-token
+        version: 1

@@ -1,0 +1,473 @@
+
+# Default values for conduktor-gateway
+
+ 
+
+global:
+
+  ## @param global.imagePullSecrets [array, nullable] Docker login secrets name for image pull
+
+  imagePullSecrets:
+
+  ## @param global.env The environment name
+
+  env: ""
+
+ 
+
+## @section Conduktor-gateway configurations
+
+## @descriptionStart
+
+## This section contains configuration of the gateway
+
+## @descriptionEnd
+
+gateway:
+
+  ## @section Conduktor-gateway image configuration
+
+  ## @descriptionStart
+
+  ## This section define the image to be used
+
+  ## @descriptionEnd
+
+  image:
+
+    ## @param gateway.image.registry Docker registry to use
+
+    # registry: artifactory-aws.centene.com/combined-docker-virtual
+
+    ## @param gateway.image.repository Image in repository format (conduktor/conduktor-gateway)
+
+    repository: conduktor/conduktor-gateway
+
+    ## @param gateway.image.tag Image tag
+
+    tag: 3.8.1
+
+    ## @param gateway.image.pullPolicy Kubernetes image pull policy
+
+    pullPolicy: IfNotPresent
+
+ 
+
+  ## @param gateway.replicas number of Gateway instances to be deployed
+
+  replicas: 2
+
+  ## @param gateway.secretRef Secret name to load sensitive env var from
+
+  secretRef: ""
+
+  ## @param gateway.extraSecretEnvVars Array with extra secret environment variables
+
+  ## e.g:
+
+  ## extraSecretEnvVars:
+
+  ##  - name: SECRET_1
+
+  ##    valueFrom:
+
+  ##      secretKeyRef:
+
+  ##        name: secret-test
+
+  ##        key: SECRET_1
+
+  ##  - name: SECRET_2
+
+  ##    valueFrom:
+
+  ##      secretKeyRef:
+
+  ##        name: secret-test
+
+  ##        key: SECRET_2
+
+  extraSecretEnvVars: []
+
+  ## @param gateway.secretSha256sum [nullable] Optional sha256sum of the referenced secret. This could be set to have a automatic restart of Gateway deployment if secret change
+
+  secretSha256sum: ""
+
+ 
+
+  ## @param gateway.env [object] Environment variables for gateway deployment
+
+
+
+  env:
+    GATEWAY_ADVERTISED_HOST: "custom-domain-name.com" #changeme
+    # Configure connection to MSK
+    KAFKA_BOOTSTRAP_SERVERS: <b-3-public.****.kafka.eu-west-1.amazonaws.com:9198>
+    KAFKA_SECURITY_PROTOCOL: SASL_SSL
+    KAFKA_SASL_MECHANISM: AWS_MSK_IAM
+    KAFKA_SASL_JAAS_CONFIG: software.amazon.msk.auth.iam.IAMLoginModule required;
+    KAFKA_SASL_CLIENT_CALLBACK_HANDLER_CLASS: io.conduktor.aws.IAMClientCallbackHandler
+    KAFKA_AWS_ACCESS_KEY_ID: <access-key-id>
+    KAFKA_AWS_SECRET_ACCESS_KEY: <secret-access-key>
+
+
+    # set up the client to gateway configuration
+    GATEWAY_BIND_HOST: "0.0.0.0"
+    GATEWAY_ROUTING_MECHANISM: "port"
+    GATEWAY_CLUSTER_ID: "default"
+    GATEWAY_FEATURE_FLAGS_INTERNAL_LOAD_BALANCING: "false"
+    GATEWAY_LICENSE_KEY: "redacted"
+
+    # set up the partner zone gateway
+    GATEWAY_SECURITY_PROTOCOL: SASL_PLAINTEXT
+    GATEWAY_USER_POOL_SERVICE_ACCOUNT_REQUIRED: "true"
+    GATEWAY_LICENSE_KEY: ****
+    LOG4J2_IO_CONDUKTOR_PROXY_NETWORK_LEVEL: DEBUG
+
+  ## @param gateway.interceptors Json configuration for interceptors to be loaded at startup by Gateway
+
+  interceptors: '[{
+
+  "name": "myAuditInterceptorPlugin",
+
+  "pluginClass": "io.conduktor.gateway.interceptor.AuditPlugin",
+
+  "priority": 100,
+
+  "config": {
+
+    "topic": ".*",
+
+    "apiKeys": [
+
+      "PRODUCE",
+
+      "FETCH"
+
+    ],
+
+    "vcluster": ".*",
+
+    "username": ".*",
+
+    "consumerGroupId": ".*",
+
+    "topicPartitions": [
+
+      1,
+
+      2
+
+    ]
+
+  }
+
+}]'
+
+ 
+
+  portRange:
+
+    ## @param gateway.portRange.start Start port of the Gateway port range
+
+    start: 9092
+
+    ## @param gateway.portRange.count Max number of broker to expose
+
+    count: 12
+
+ 
+
+  admin:
+
+    ## @param gateway.admin.port Admin http server port
+
+    port: 8888
+
+ 
+
+  jmx:
+
+    ## @param gateway.jmx.enable Enable jmx jvm options
+
+    enable: false
+
+    ## @param gateway.jmx.port jmx port to expose by default jvm args
+
+    port: 9999
+
+    ## @param gateway.jmx.jvmArgs arguments to pass to the Gateway container jvm
+
+    jvmArgs: -Dcom.sun.management.jmxremote.port={{ .Values.gateway.jmx.port }} -Dcom.sun.management.jmxremote.rmi.port={{ .Values.gateway.jmx.port }} -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.local.only=false -Dcom.sun.management.jmxremote.ssl=false -Djava.rmi.server.hostname=127.0.0.1
+
+ 
+
+  ## @param gateway.startupProbeDelay [nullable] Optional delay in second before startup probe should be running (default 10)
+
+  startupProbeDelay: ""
+
+ 
+
+  ## @param gateway.podLabels Specific labels to be added to Gateway pod by deployment
+
+  podLabels: {}
+
+ 
+
+  ## @param gateway.podAnnotations Gateway pod annotations
+
+  podAnnotations: {}
+
+ 
+
+  ## @param gateway.securityContext Container security context
+
+  securityContext: {}
+
+    # capabilities:
+
+    #   drop:
+
+    #   - ALL
+
+    # readOnlyRootFilesystem: true
+
+    # runAsNonRoot: true
+
+    # runAsUser: 1000
+
+ 
+
+  ## @param gateway.volumes Define user specific volumes for Gateway deployment
+
+ 
+
+  ## @param gateway.volumeMounts Define user specific volumeMounts  for Gateway container in deployment
+
+     
+
+ 
+
+## @section TLS configuration
+
+## @descriptionStart
+
+## This section is for configuring Gateway to handle certificate to manage SSL endpoint inside Gateway deployment
+
+## @descriptionEnd
+
+tls:
+
+  ## @param tls.enable Enable tls injection into Gateway
+
+  enable: false
+
+  ## @param tls.secretRef Secret name with keystore to load
+
+  secretRef: ""
+
+  ## @param tls.keystoreKey Key in the secret to load as keystore
+
+  keystoreKey: keystore.jks
+
+  ## @param tls.keystoreFile File name to mount keystore as
+
+  keystoreFile: keystore.jks
+
+ 
+
+## @section Conduktor-gateway service configurations
+
+## @descriptionStart
+
+## This section contains kubernetes services configuration
+
+## @descriptionEnd
+
+service:
+
+  ## @section Conduktor-gateway external service configurations
+
+  ## @descriptionStart
+
+  ## This section specify external service configuration
+
+  ## @descriptionEnd
+
+  external:
+    # loadBalancerIP: "10.100.102.55"
+    enable: true
+
+    # type: ClusterIP
+    type: LoadBalancer
+
+    annotations:
+
+      service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+      service.beta.kubernetes.io/aws-load-balancer-internal: 'false'
+      # service.beta.kubernetes.io/aws-load-balancer-name: "my-custom-nlb-name"
+      # service.beta.kubernetes.io/aws-load-balancer-subnets: "subnet-07516d976f822aa88,subnet-0bd9ff0dae8b22ef9,subnet-084a332a46b575b4c,subnet-09d5e0821d878fe5e,subnet-0b6e812cb3f1a156a"
+
+    admin: true
+
+    ## @param service.external.jmx Enable jmx exposition on external service
+
+    jmx: false
+
+  ## @section Conduktor-gateway internal service configurations
+
+  ## @descriptionStart
+
+  ## This section specify internal service configuration
+
+  ## @descriptionEnd
+
+  internal:
+
+    ## @param service.internal.annotations
+
+    annotations: {}
+
+ 
+
+## @section Conduktor-gateway metrics activation
+
+## @descriptionStart
+
+## Gateway embed metrics to be installed within you cluster if your have the correct capabilities (Prometheus and Grafana operators)
+
+## @descriptionEnd
+
+metrics:
+
+  alerts:
+
+    ## @param metrics.alerts.enable Enable prometheus alerts if prometheus alerts rules is supported on cluster
+
+    enable: false
+
+  checklyAlerts:
+
+    ## @param metrics.checklyAlerts.enable Enable alerts for checky jobs if prometheus rules is supported on cluster
+
+    enable: false
+
+  prometheus:
+
+    ## @param metrics.prometheus.enable Enable ServiceMonitor prometheus operator configuration for metrics scrapping
+
+    enable: false
+
+    ## @param metrics.prometheus.metricRelabelings Configure metric relabeling in ServiceMonitor
+
+    metricRelabelings: {}
+
+    ## @param metrics.prometheus.relabelings Configure relabelings in ServiceMonitor
+
+    relabelings: {}
+
+    ## @param metrics.prometheus.extraParams Extra parameters in ServiceMonitor
+
+    extraParams: {}
+
+      # basicAuth:
+
+      #   password:
+
+      #     name: conduktor-admin-user # secret name
+
+      #     key: password
+
+      #   username:
+
+      #     name: conduktor-admin-user # secret name
+
+      #     key: username
+
+  grafana:
+
+    ## @param metrics.grafana.enable Enable grafana dashboards to installation
+
+    enable: false
+
+    datasources:
+
+      ## @param metrics.grafana.datasources.prometheus Prometheus datasource to use for metric dashboard
+
+      prometheus: prometheus
+
+      ## @param metrics.grafana.datasources.loki Loki datasource to use for log dashboard
+
+      loki: loki
+
+ 
+
+## @section Kubernetes common configuration
+
+## @descriptionStart
+
+## Shared kubernetes configuration of the chart
+
+## @descriptionEnd
+
+ 
+
+serviceAccount:
+
+  ## @param serviceAccount.create Create Kubernetes service account. Default kube value if false
+
+  # Specifies whether a service account should be created
+
+  # If AWS IAM is used, need to have create: false
+
+  create: false
+
+ 
+
+## @param commonLabels Labels to be applied to all resources created by this chart
+
+commonLabels: {}
+
+ 
+
+## @param nodeSelector Container node selector
+
+nodeSelector: {}
+
+ 
+
+## @param tolerations Container tolerations
+
+tolerations: []
+
+ 
+
+## @param affinity Container affinity
+
+affinity: {}
+
+ 
+
+## @section Dependencies
+
+## @descriptionStart
+
+## Enable and configure chart dependencies if not available in your deployment
+
+## @descriptionEnd
+
+kafka:
+
+  ## @param kafka.enabled Deploy a kafka along side Gateway (This should only used for testing purposes)
+
+  enabled: false
+
+
+# ingress:
+#   enabled: false
+#   ingressClassName: "nginx"
+#   hostname: my-custom-nlb-name-8ab3e5bf32616768.elb.us-east-1.amazonaws.com
+#   tls: false
+#   selfSigned: false
+  # annotations:
+    # service.beta.kubernetes.io/aws-load-balancer-scheme: "internal"

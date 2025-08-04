@@ -1,0 +1,27 @@
+---
+apiVersion: gateway/v2
+kind: Interceptor
+metadata:
+  name: encrypt-orders-json
+spec:
+  pluginClass: io.conduktor.gateway.interceptor.EncryptPlugin
+  priority: 100
+  config:
+    topic: orders
+    kmsConfig:
+      keyTtlMs: 5
+      vault:
+        uri: http://vault:8200
+        token: vault-plaintext-root-token
+        version: 1
+    fields:
+      - fieldName: customerId
+        keySecretId: vault-kms://vault:8200/transit/keys/orders
+      - fieldName: orderId
+        keySecretId: vault-kms://vault:8200/transit/keys/orders
+      - fieldName: orderNumber
+        keySecretId: vault-kms://vault:8200/transit/keys/orders
+      - fieldName: creditCardNumber
+        keySecretId: vault-kms://vault:8200/transit/keys/orders
+      - fieldName: email
+        keySecretId: vault-kms://vault:8200/transit/keys/orders

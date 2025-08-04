@@ -1,0 +1,8 @@
+---
+apiVersion: gateway/v2
+kind: GatewayServiceAccount
+metadata:
+  vCluster: passthrough
+  name: admin
+spec:
+  type: LOCAL
