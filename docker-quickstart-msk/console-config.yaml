@@ -1,0 +1,19 @@
+organization:
+  name: Conduktor Demo
+database:
+  url: postgresql://postgres:pwd@postgres/postgres
+clusters:
+  - id: msk-kafka-cluster
+    name: msk kafka
+    color: '#0013E7'
+    bootstrapServers: '${MSK_BOOTSTRAP}'
+    properties: |
+      sasl.mechanism=AWS_MSK_IAM
+      security.protocol=SASL_SSL
+      sasl.jaas.config=software.amazon.msk.auth.iam.IAMLoginModule required;
+      sasl.client.callback.handler.class=io.conduktor.aws.IAMClientCallbackHandler
+      aws_access_key_id=${MSK_KEY}
+      aws_secret_access_key=${MSK_SECRET}      
+admin:
+  email: admin@demo.dev
+  password: adminP4ss!

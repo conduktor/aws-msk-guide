@@ -1,0 +1,26 @@
+{
+    "name": "schemaBasedEncryptPlugin",
+    "pluginClass": "io.conduktor.gateway.interceptor.EncryptSchemaBasedPlugin",
+    "priority": 100,
+    "config": {
+      "topic": ".*",
+      "schemaRegistryConfig": {
+        "host": "",
+        "additionalConfig": {
+            "basic.auth.credentials.source": "USER_INFO",
+            "basic.auth.user.info": ""
+        }
+      },
+      "kmsConfig": {
+        "vault": {
+          "uri": "http://vault:8200",
+          "token": "vault-plaintext-root-token",
+          "version": 1
+        }
+      },
+      "defaultKeySecretId": "myDefaultKeySecret",
+      "defaultAlgorithm": "AES128_EAX",
+      "tags": ["PII", "ENCRYPTION"],
+      "namespace": "conduktor."
+    }
+  }

@@ -1,0 +1,152 @@
+
+services:
+  postgres: 
+    image: postgres:15.1
+    restart: always
+    ports:
+      - 5432:5432
+    networks:
+      - conduktor-net
+    environment:
+      POSTGRES_PASSWORD: pwd
+
+  conduktor-console:
+    image: conduktor/conduktor-console:latest
+    hostname: console
+    container_name: console
+    networks:
+      - conduktor-net
+    ports:
+      - 8080:8080
+    volumes:
+      - ./console-config.yaml:/opt/conduktor/console-config.yaml
+    environment:
+      CDK_IN_CONF_FILE: /opt/conduktor/console-config.yaml
+      CDK_LICENSE: ${CDK_LICENSE:-}
+      CDK_MONITORING_CORTEX-URL: http://conduktor-monitoring:9009/
+      CDK_MONITORING_ALERT-MANAGER-URL: http://conduktor-monitoring:9010/
+      CDK_MONITORING_CALLBACK-URL: http://console:8080/monitoring/api/
+      CDK_MONITORING_NOTIFICATIONS-CALLBACK-URL: http://localhost:8080
+      MSK_BOOTSTRAP: ${MSK_BOOTSTRAP}
+      MSK_KEY: ${MSK_KEY}
+      MSK_SECRET: ${MSK_SECRET}
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          'curl --fail http://localhost:8080/platform/api/modules/health/ready',
+        ]
+      interval: 10s
+      start_period: 120s # Leave time for the psql init scripts to run
+      timeout: 5s
+      retries: 3
+    depends_on:
+      postgres:
+        condition: service_started
+
+  conduktor-monitoring:
+    hostname: conduktor-monitoring
+    image: conduktor/conduktor-console-cortex:latest
+    networks:
+      - conduktor-net
+    ports:
+      - "9009:9009" # cortex
+      - "9010:9010" # alert manager
+      - "9090:9090" # prometheus
+    environment:
+      CDK_CONSOLE-URL: "http://console:8080"
+
+  gateway-msk:
+    image: conduktor/conduktor-gateway:latest
+    hostname: gateway-msk
+    container_name: gateway-msk
+    networks:
+      - conduktor-net
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: ${MSK_BOOTSTRAP}
+      KAFKA_SECURITY_PROTOCOL: SASL_SSL
+      KAFKA_SASL_MECHANISM: AWS_MSK_IAM
+      KAFKA_SASL_JAAS_CONFIG: software.amazon.msk.auth.iam.IAMLoginModule required;
+      KAFKA_SASL_CLIENT_CALLBACK_HANDLER_CLASS: io.conduktor.aws.IAMClientCallbackHandler
+      KAFKA_AWS_ACCESS_KEY_ID: ${MSK_KEY}
+      KAFKA_AWS_SECRET_ACCESS_KEY: ${MSK_SECRET}
+      AWS_ACCESS_KEY_ID: ${MSK_KEY}
+      AWS_SECRET_ACCESS_KEY: ${MSK_SECRET}
+
+      # Cluster ID must be different for each type of gateway otherwise they will loadbalance with each other
+      GATEWAY_CLUSTER_ID: gateway-msk
+      GATEWAY_LICENSE_KEY: ${CDK_LICENSE:-}
+      CDK_LICENSE: ${CDK_LICENSE:-}
+      GATEWAY_SECURITY_PROTOCOL: SASL_PLAINTEXT
+      GATEWAY_SECURITY_MODE: KAFKA_MANAGED
+      GATEWAY_FEATURE_FLAGS_ANALYTICS: false
+      GATEWAY_USER_POOL_SECRET_KEY: 2JuAfAgTEdO68UmczqmiWmiiJQgACcBqh8xa80COREo=
+      # GATEWAY_MIN_BROKERID: 1
+      LOG4J2_IO_CONDUKTOR_PROXY_NETWORK_LEVEL: DEBUG
+      GATEWAY_USER_POOL_SERVICE_ACCOUNT_REQUIRED: true
+
+      #MSK serverless speficic settings
+      GATEWAY_AUDIT_LOG_REPLICATION_FACTOR_OF_TOPIC: 3
+      GATEWAY_AUDIT_LOG_NUM_PARTITIONS_OF_TOPIC: 3
+      GATEWAY_TOPIC_STORE_KCACHE_REPLICATION_FACTOR: 3
+      GATEWAY_DATA_QUALITY_TOPIC_REPLICATION_FACTOR: 3
+      GATEWAY_DATA_QUALITY_TOPIC_PARTITIONS: 3
+
+
+      GATEWAY_PORT_COUNT: 416 # MSK is alot of brokers on serverless
+
+    healthcheck:
+      test: curl localhost:8888/health
+      start_period: 10s
+      interval: 5s
+      retries: 25
+
+  kafka-client:
+    image: confluentinc/cp-kafka:7.5.1
+    hostname: kafka-client
+    container_name: kafka-client
+    command: sleep infinity
+    environment:
+      MSK_BOOTSTRAP: ${MSK_BOOTSTRAP}
+      MSK_KEY: ${MSK_KEY}
+      MSK_SECRET: ${MSK_SECRET}
+    networks:
+      - conduktor-net
+    volumes:
+      - type: bind
+        source: "./clientConfig"
+        target: /clientConfig
+        read_only: true
+  
+  vault:
+    image: hashicorp/vault
+    hostname: vault
+    container_name: vault
+    ports:
+      - "8200:8200"
+    networks:
+      - conduktor-net
+    command: [
+      "sh",
+      "-c",
+      "(while ! nc -z 127.0.0.1 8200; \
+                do \
+                sleep 1; \
+                echo 'waiting for vault service ...'; \
+                done; \
+                export VAULT_ADDR='http://0.0.0.0:8200';\
+                vault secrets enable transit; \
+                vault secrets enable -version=1 kv; \
+                vault secrets enable totp \
+                ) & vault server -dev -dev-listen-address=0.0.0.0:8200",
+    ]
+    environment:
+      VAULT_ADDR: "http://0.0.0.0:8200"
+      VAULT_DEV_ROOT_TOKEN_ID: "vault-plaintext-root-token"
+
+
+
+networks:
+  conduktor-net:
+    name: conduktor-net
+    driver: bridge

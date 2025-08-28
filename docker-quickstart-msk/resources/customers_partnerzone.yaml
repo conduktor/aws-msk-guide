@@ -1,0 +1,26 @@
+---
+apiVersion: v2
+kind: PartnerZone
+metadata:
+    name: customers
+spec:
+    authenticationMode:
+        serviceAccount: customers
+        type: PLAIN
+    cluster: partner-gateway
+    displayName: Partner Zone for Customers
+    url: http://conduktor.io
+    topics:
+        - name: oscorp_customers
+          backingTopic: customers-json-encrypted
+          permission: READ
+    partner:
+        name: Shelby Forthright
+        role: CEO
+        email: shelby@customers.com
+        phone: 07827 837 177
+    trafficControlPolicies:
+        maxProduceRate: 1000000
+        maxConsumeRate: 2000000
+        limitCommitOffset: 30
+        limitConnectionsRate: 10

@@ -2,6 +2,8 @@
 
 ![image](./architecture.png)
 
+## [Quickstart Guide for Running Conduktor on MSK](docker-quickstart-msk/README.md)
+
 ## [Set up Console](https://docs.conduktor.io/guide/tutorials/deploy-aws#overview)
 * *make sure that console can reach gateway by setting it up on a public vpc or reachable vpc* 
 * [make sure to set up rds postgres and s3](https://docs.conduktor.io/guide/conduktor-in-production/deploy-artifacts//deploy-console/kubernetes#production-requirements)

@@ -1,0 +1,29 @@
+---
+apiVersion: console/v2
+kind: KafkaCluster
+metadata:
+  name: partner-gateway
+spec:
+  displayName: Conduktor Gateway
+  icon: meteor
+  color: "#00ff00"
+  bootstrapServers: gateway-msk:6969
+  ignoreUntrustedCertificate: false
+  properties:
+    sasl.jaas.config: org.apache.kafka.common.security.plain.PlainLoginModule required username="admin" password="${GATEWAY_ADMIN_TOKEN}";
+    security.protocol: SASL_PLAINTEXT
+    sasl.mechanism: PLAIN
+  # schemaRegistry:
+  #   type: "ConfluentLike"
+  #   url: http://schemaregistry:8085
+  #   security:
+  #     type: BasicAuth
+  #     username: admin-sr
+  #     password: secret
+  #   ignoreUntrustedCertificate: false
+  kafkaFlavor:
+    type: Gateway
+    url: http://gateway-msk:8888
+    user: admin
+    password: conduktor
+    virtualCluster: passthrough

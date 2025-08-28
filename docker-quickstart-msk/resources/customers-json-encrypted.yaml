@@ -1,0 +1,17 @@
+---
+apiVersion: v2
+kind: Topic
+metadata:
+    name: customers-json-encrypted
+    cluster: confluent-kafka-cluster
+    catalogVisibility: PUBLIC
+    descriptionIsEditable: true
+    description: This is a topic description
+    sqlStorage:
+        retentionTimeInSecond: 42
+spec:
+    partitions: 1
+    replicationFactor: 3
+    configs:
+        cleanup.policy: delete
+        retention.ms: '86400000'
