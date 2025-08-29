@@ -12,6 +12,6 @@
 * [Setting up MSK with IAM](https://docs.conduktor.io/guide/conduktor-in-production/deploy-artifacts/deploy-console/sample-config#amazon-msk-with-iam-authentication-example)
 * [Setting up AWSK MSK with Glue Schema Registry](https://docs.conduktor.io/guide/conduktor-in-production/deploy-artifacts/deploy-console/sample-config#amazon-msk-with-glue-schema-registry)
 
-## [Set up Gateway](gateway-confluent-cloud/README.md)
+## [Set up Gateway](gateway-msk/README.md)
 
 * [Configuring connectivity from Gateway to IAM](https://docs.conduktor.io/guide/conduktor-in-production/deploy-artifacts/deploy-gateway/index#aws-msk-cluster-with-iam)
