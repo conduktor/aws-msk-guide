@@ -1,6 +1,6 @@
 # Overview
 
-![image](./architecture.png)
+![image](./aws_kafka_gateway_arch.svg)
 
 ## [Quickstart Guide for Running Conduktor on MSK](docker-quickstart-msk/README.md)
 
