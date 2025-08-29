@@ -2,7 +2,7 @@
 
 ![image](./aws_kafka_gateway_arch.svg)
 
-## [Quickstart Guide for Running Conduktor on MSK](docker-quickstart-msk/README.md)
+## [Quickstart Guide for Running Conduktor on MSK (docker) ](docker-quickstart-msk/README.md)
 
 ## [Set up Console](https://docs.conduktor.io/guide/tutorials/deploy-aws#overview)
 * *make sure that console can reach gateway by setting it up on a public vpc or reachable vpc* 
